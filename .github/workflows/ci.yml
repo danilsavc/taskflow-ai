@@ -30,6 +30,8 @@ jobs:
 
       - name: Run tests
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg://taskflow:taskflow_dev_password@localhost:5432/taskflow
         run: python -m pytest -v
 
   frontend:
