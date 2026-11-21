@@ -4,10 +4,9 @@ async function BackendStatus() {
   let backendStatus = "unknown";
 
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/health`,
-      { cache: "no-store" }
-    );
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`, {
+      cache: "no-store",
+    });
 
     if (response.ok) {
       const data: { status: string } = await response.json();
