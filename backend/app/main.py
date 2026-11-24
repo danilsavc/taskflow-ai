@@ -11,9 +11,10 @@ app = FastAPI(
     debug=settings.debug,
 )
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[settings.frontend_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -21,15 +22,19 @@ app.add_middleware(
 
 
 @app.get("/health")
-def health_check() -> dict[str, str]:
+async def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
 @app.get("/ready")
-def readiness_check() -> dict[str, str]:
+async def readiness_check() -> dict[str, str]:
     try:
-        with engine.connect() as connection:
-            connection.execute(text("SELECT 1"))
+        async with engine.connect() as connection:
+            await connection.execute(text("SELECT 1"))
     except SQLAlchemyError:
-        raise HTTPException(status_code=503, detail="Database unavailable")
+        raise HTTPException(
+            status_code=503,
+            detail="Database unavailable",
+        )
+
     return {"status": "OK", "database": "connection"}

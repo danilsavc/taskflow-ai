@@ -1,3 +1,4 @@
+
 # TaskFlow AI
 
 TaskFlow AI is a full-stack task and project management application.
@@ -15,9 +16,11 @@ TaskFlow AI is a full-stack task and project management application.
 ### Backend
 - Python 3.12
 - FastAPI
-- SQLAlchemy
+- SQLAlchemy (async)
 - Alembic
 - PostgreSQL
+- asyncpg
+- Pydantic
 - Ruff
 - Pytest
 
@@ -34,7 +37,10 @@ taskflow-ai/
 ├── backend/
 │   ├── app/
 │   ├── migration/
-│   └── tests/
+│   ├── tests/
+│   ├── .env.example
+│   ├── requirements.txt
+│   └── alembic.ini
 ├── frontend/
 ├── docs/
 │   └── diagrams/
@@ -69,38 +75,43 @@ docker compose up -d
 
 ### 3. Configure the backend
 
-Create a `.env` file inside `backend/` using `.env.example` as a template.
+From the project root, create and activate a virtual environment:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
 
 Install backend dependencies:
 
-```bash
-python -m venv .venv
+```powershell
+pip install -r backend/requirements.txt
 ```
 
-Activate the virtual environment and install the required Python packages.
+Create a `.env` file inside `backend/` using `.env.example` as a template.
 
 ### 4. Run database migrations
 
 From the `backend/` directory:
 
-```bash
-alembic upgrade head
+```powershell
+python -m alembic upgrade head
 ```
 
 ### 5. Start the backend
 
 From the `backend/` directory:
 
-```bash
+```powershell
 python -m uvicorn app.main:app --reload
 ```
 
 Backend URLs:
 
-- API: http://127.0.0.1:8000
-- Swagger documentation: http://127.0.0.1:8000/docs
-- Health check: http://127.0.0.1:8000/health
-- Database readiness: http://127.0.0.1:8000/ready
+- API: http://localhost:8000
+- Swagger documentation: http://localhost:8000/docs
+- Health check: http://localhost:8000/health
+- Database readiness: http://localhost:8000/ready
 
 ### 6. Configure and start the frontend
 
@@ -117,16 +128,26 @@ Frontend URL: http://localhost:3000
 
 ### Backend
 
-```bash
+From the project root:
+
+```powershell
 ruff check backend/
+```
+
+From the `backend/` directory:
+
+```powershell
 python -m pytest -v
 ```
 
 ### Frontend
 
+From the `frontend/` directory:
+
 ```bash
 npm run lint
 npx prettier --check .
+npm run build
 ```
 
 ## Continuous Integration
@@ -136,7 +157,16 @@ GitHub Actions automatically runs backend and frontend checks on every push and 
 ## Project Status
 
 Currently implemented:
+
 - Initial project structure
 - FastAPI backend
-- PostgreSQL database
-- SQLAlchemy and Ale
+- PostgreSQL database connection
+- Asynchronous SQLAlchemy engine and sessions
+- Alembic database migrations
+- User registration schemas
+- Password hashing and verification
+- Health and database readiness endpoints
+- Backend tests
+- Ruff code quality checks
+- Frontend application setup
+- GitHub Actions CI workflow

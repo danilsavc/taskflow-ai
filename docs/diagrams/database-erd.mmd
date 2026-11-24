@@ -1,43 +1,46 @@
+
 erDiagram
-USERS {
-    int id PK
-    string email UK
-    string password_hash
-    datetime created_at
-}
+    USERS {
+        int id PK
+        string email UK
+        string password_hash
+        datetime created_at
+    }
 
-WORKSPACES {
-    ind id PK
-    string name
-    datetime created_at
-}
+    WORKSPACES {
+        int id PK
+        string name
+        datetime created_at
+    }
 
-WORKSPACE_MEMBERSHIPS {
-    int id PK
-    int user_id FK
-    int workspace_id FK
-    string role
-}
+    WORKSPACE_MEMBERSHIPS {
+        int id PK
+        int user_id FK
+        int workspace_id FK
+        string role
+    }
 
-PROJECTS {
-    int id PK
-    int workspace_id FK
-    string name
-    string status
-}
+    PROJECTS {
+        int id PK
+        int workspace_id FK
+        string name
+        string status
+    }
 
-TASKS {
-    int id PK
-    int project_id FK
-    int assignee_id FK
-    string title
-    string status
-    string priority
-    datetime due_at
-}
+    TASKS {
+        int id PK
+        int project_id FK
+        int assignee_id FK
+        int created_by_id FK
+        string title
+        string status
+        string priority
+        datetime due_at
+    }
 
-USERS ||--o{ WORKSPACE_MEMBERSHIPS : has
-WORKSPACES ||--o{ WORKSPACE_MEMBERSHIPS : contains
-WORKSPACES ||--o{ PROJECTS : contains
-PROJECTS ||--o{ TASKS : contains
-USERS o|--o{ TASKS : assigned
+    USERS ||--o{ WORKSPACE_MEMBERSHIPS : has
+    WORKSPACES ||--o{ WORKSPACE_MEMBERSHIPS : contains
+    WORKSPACES ||--o{ PROJECTS : contains
+    PROJECTS ||--o{ TASKS : contains
+    USERS o|--o{ TASKS : assigned_to
+    USERS ||--o{ TASKS : created
