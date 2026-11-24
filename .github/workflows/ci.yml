@@ -30,6 +30,7 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: postgresql+asyncpg://taskflow:taskflow_dev_password@localhost:5432/taskflow
+          SECRET_KEY: ci-test-only-secret-key-not-for-production-123456789
         run: python -m pytest -v
 
   frontend:
