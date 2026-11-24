@@ -17,3 +17,8 @@ class UserRegister(BaseModel):
             raise ValueError("Password cannot be empty")
 
         return value
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
