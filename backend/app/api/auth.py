@@ -1,33 +1,37 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.dependencies import get_current_user
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import create_access_token
 from app.models.user import User
 from app.schemas.user import UserLogin, UserRegister
+from app.services.auth_service import (
+    EmailAlreadyRegisteredError,
+    InvalidCredentialsError,
+    authenticate_user,
+    register_user,
+)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register_user(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == user_data.email))
-    existing_user = result.scalar_one_or_none()
-
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
+async def register_user_endpoint(
+    user_data: UserRegister, db: AsyncSession = Depends(get_db)
+):
+    try:
+        new_user = await register_user(
+            db=db,
+            email=user_data.email,
+            password=user_data.password,
         )
-
-    new_user = User(
-        email=user_data.email, password_hash=hash_password(user_data.password)
-    )
-
-    db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
+    except EmailAlreadyRegisteredError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already registered",
+        )
 
     return {
         "id": new_user.id,
@@ -37,18 +41,14 @@ async def register_user(user_data: UserRegister, db: AsyncSession = Depends(get_
 
 
 @router.post("/login")
-async def login_user(
+async def login_user_endpoint(
     user_data: UserLogin, response: Response, db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(User).where(User.email == user_data.email))
-    user = result.scalar_one_or_none()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+    try:
+        user = await authenticate_user(
+            db=db, email=user_data.email, password=user_data.password
         )
-
-    if not verify_password(user_data.password, user.password_hash):
+    except InvalidCredentialsError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
         )
@@ -70,3 +70,21 @@ async def login_user(
         "user_id": user.id,
         "email": user.email,
     }
+
+
+@router.get("/me")
+async def get_me(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "created_at": current_user.created_at,
+    }
+
+
+@router.post("/logout")
+async def logout_user(response: Response):
+    response.delete_cookie(
+        key="access_token", httponly=True, secure=False, samesite="lax", path="/"
+    )
+
+    return {"message": "Logout successful"}
